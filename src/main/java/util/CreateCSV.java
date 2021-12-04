@@ -9,7 +9,7 @@ import java.sql.SQLXML;
 
 public class CreateCSV {
 
-    private final static String blobname = "blobfile.lob";
+    private final static String blobname = "BLOB";
 
     public static void run(Connection conn, ConfPar par, String tablename, long recno) throws SQLException, IOException {
 
