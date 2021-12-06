@@ -16,6 +16,7 @@ public class ConfPar {
     private final String del = "del";
     private final String idcol = "idcol";
     private final String idxml = "xmlcol";
+    private final String counter = "counter";
 
     public String getURL() {
         return prop.getProperty(url);
@@ -43,6 +44,12 @@ public class ConfPar {
 
     public String getXmlCol() {
         return prop.getProperty(idxml);
+    }
+
+    public int getCounter() {
+        String s = prop.getProperty(counter,"1000");
+        int i = Integer.parseInt(s);
+        return i;
     }
 
     private void checkpar(String p, String filename) {

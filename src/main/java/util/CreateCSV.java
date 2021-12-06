@@ -34,6 +34,7 @@ public class CreateCSV {
              PrintStream blobwriter = new PrintStream(blobfile);
              PrintStream writer = new PrintStream(outtext)) {
             CharBuffer buf = CharBuffer.allocate(1000);
+            Log.info("Starting extracting table to delimited file");
             while (res.next()) {
                 String id = res.getString(par.getIdCol());
                 SQLXML xml = res.getSQLXML(par.getXmlCol());
@@ -50,8 +51,11 @@ public class CreateCSV {
                 //Object o = res.getBinaryStream(par.getXmlCol());
                 // Object o = res.getClob(par.getXmlCol());
                 counter++;
-                if (counter % 1000 == 0) {
-                    System.out.println((counter * 100 / recno) + "% " + counter + " (" + recno + ")");
+                if (counter % par.getCounter() == 0) {
+                    String info = String.format("%d%%  %d (%d)", counter * 100 / recno, counter, recno);
+                    String s = String.format("\r%-50s", info);
+                    System.out.print(s);
+//                    System.out.println((counter * 100 / recno) + "% " + counter + " (" + recno + ")");
                 }
                 // prepare CSV text line
                 writer.print(id);
@@ -65,5 +69,8 @@ public class CreateCSV {
                 blobcounter += bcounter;
             }
         }
+        System.out.println();
+        Log.info("Finished");
+
     }
 }
