@@ -17,10 +17,13 @@ public class ConfPar {
     private final String idcol = "idcol";
     private final String idxml = "xmlcol";
     private final String counter = "counter";
+    private final String where = "where";
 
     public String getURL() {
         return prop.getProperty(url);
     }
+
+    public String getWhere() { return prop.getProperty(where); }
 
     public String getUser() {
         return prop.getProperty(user);
