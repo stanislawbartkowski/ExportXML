@@ -31,27 +31,35 @@ public class CreateCSV {
         long counter = 0;
         long blobcounter = 0;
         Log.info("Starting extracting table to delimited file");
-        String querystmt =  "SELECT " + par.getIdCol() + "," + par.getXmlCol() + " FROM " + tablename;
+        String querystmt = "SELECT " + par.getIdCol() + "," + par.getXmlCol() + " FROM " + tablename;
+        if (par.getQuery() != null) {
+            querystmt = String.format(par.getQuery(), tablename);
+        }
         if (par.getWhere() != null) querystmt = querystmt + " WHERE " + par.getWhere();
+        boolean asblob = par.readXmlasblob();
         try (ResultSet res = Query.runStatement(conn, querystmt);
              OutputStream blobwriter = new FileOutputStream(blobfile);
              PrintStream writer = new PrintStream(outtext)) {
             byte[] buf = new byte[1000];
             while (res.next()) {
                 String id = res.getString(par.getIdCol());
-                SQLXML xml = res.getSQLXML(par.getXmlCol());
                 int bcounter = 0;
-                try (InputStream r = xml.getBinaryStream()) {
+                if (asblob) {
+                    SQLXML xml = res.getSQLXML(par.getXmlCol());
+                    try (InputStream r = xml.getBinaryStream()) {
 
-                    while (true) {
-                        int i = r.read(buf);
-                        if (i == -1) break;
-                        blobwriter.write(buf,0,i);
-                        bcounter += i;
+                        while (true) {
+                            int i = r.read(buf);
+                            if (i == -1) break;
+                            blobwriter.write(buf, 0, i);
+                            bcounter += i;
+                        }
                     }
+                } else {
+                    String xml = res.getString(par.getXmlCol()) + System.lineSeparator();
+                    blobwriter.write(xml.getBytes());
+                    bcounter = xml.getBytes().length;
                 }
-                //Object o = res.getBinaryStream(par.getXmlCol());
-                // Object o = res.getClob(par.getXmlCol());
                 counter++;
                 if (counter % par.getCounter() == 0) {
                     String info = String.format("%d%% %d (%d)", counter * 100 / recno, counter, recno);

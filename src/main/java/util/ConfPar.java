@@ -18,6 +18,10 @@ public class ConfPar {
     private final String idxml = "xmlcol";
     private final String counter = "counter";
     private final String where = "where";
+    private final String query="query";
+
+    private final String asblob="asblob";
+    private final String asstring="asstring";
 
     public String getURL() {
         return prop.getProperty(url);
@@ -45,8 +49,19 @@ public class ConfPar {
         return prop.getProperty(idcol);
     }
 
+    public String getQuery() {
+        return prop.getProperty(query);
+    }
+
     public String getXmlCol() {
-        return prop.getProperty(idxml);
+        String[] id = prop.getProperty(idxml).split(",");
+        return id[0];
+    }
+
+    public boolean readXmlasblob() {
+        String[] id = prop.getProperty(idxml).split(",");
+        if (id.length == 1) return true;
+        return id[1].equals(asblob);
     }
 
     public int getCounter() {
@@ -73,6 +88,17 @@ public class ConfPar {
         checkpar(outdir, filename);
         checkpar(idcol, filename);
         checkpar(idxml, filename);
+        if (getQuery() != null) Log.info(String.format("Use query: %s", getQuery()));
+        // verify blob
+        String[] id = prop.getProperty(idxml).split(",");
+        if (id.length > 1) {
+            String m = id[1];
+            if (!m.equals(asstring) && !m.equals(asblob)) {
+                String errmess = prop.getProperty(idxml) + " method specifiers expected as %s or %s ".format(asblob,asstring);
+                Log.severe(errmess);
+            }
+        }
+        Log.info(String.format("Read XML columns as %s",  readXmlasblob()?" as blob" : "as string"));
         Log.info("User: " + getUser());
         Log.info("Password:XXXXX");
         Log.info("Url: " + getURL());
