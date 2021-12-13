@@ -6,22 +6,23 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLXML;
+import java.util.Optional;
 
 public class CreateCSV {
 
     private final static String blobname = "BLOB";
 
-    public static void run(Connection conn, ConfPar par, String tablename, long recno) throws SQLException, IOException {
+    public static void run(Connection conn, ConfPar par, String tablename, long recno, Optional<String> ocsv, Optional<String> oblob) throws SQLException, IOException {
 
         File outdir = new File(par.getDir());
 
         Log.info("Check directory " + outdir.getCanonicalPath());
         outdir.mkdirs();
         if (!outdir.isDirectory()) Log.severe(outdir.getAbsolutePath() + " not a directory");
-        File outtext = new File(outdir, tablename + ".csv");
+        File outtext = ocsv.isPresent() ? new File(ocsv.get()) : new File(outdir, tablename + ".csv");
         Log.info("Writing to delimited file " + outtext.getAbsolutePath());
 
-        File blobdir = new File(outdir, tablename + "blob");
+        File blobdir = oblob.isPresent() ? new File(oblob.get()) : new File(outdir, tablename + "blob");
         Log.info("Check blob diretory " + blobdir.getAbsolutePath());
         blobdir.mkdirs();
         if (!blobdir.isDirectory()) Log.severe(blobdir.getAbsolutePath() + " not a directory");
