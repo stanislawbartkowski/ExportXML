@@ -61,6 +61,7 @@ public class CreateCSV {
                     blobwriter.write(xml.getBytes());
                     bcounter = xml.getBytes().length;
                 }
+                if (counter == 0) System.out.println("First row is arriving");
                 counter++;
                 if (counter % par.getCounter() == 0) {
                     String info = String.format("%d%% %d (%d)", counter * 100 / recno, counter, recno);
