@@ -60,7 +60,7 @@ public class CreateCSV {
     }
 
 
-    public static void run(Connection conn, ConfPar par, String tablename, long recno, Optional<String> ocsv, Optional<String> oblob) throws SQLException, IOException {
+    public static void run(Connection conn, ConfPar par, String tablename, long recno, boolean silentmode, Optional<String> ocsv, Optional<String> oblob) throws SQLException, IOException {
 
         File outdir = new File(par.getDir());
 
@@ -84,7 +84,7 @@ public class CreateCSV {
              PrintStream writer = new PrintStream(outtext)) {
 
             RunCSV run = new RunCSV(blobwriter, writer, par);
-            run.run(conn,par,tablename,recno);
+            run.run(conn, par, tablename, recno, silentmode);
         }
     }
 }

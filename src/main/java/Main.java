@@ -18,6 +18,7 @@ public class Main {
     private final static String outputcsv = "oc";
     private final static String outputblobdir = "ob";
     private final static String destt = "d";
+    private final static String silent = "s";
 
     private static void printHelp(Options options, Optional<String> par, boolean notfound) {
         HelpFormatter formatter = new HelpFormatter();
@@ -38,6 +39,8 @@ public class Main {
         options.addOption(outputcsv, true, "(Optional) CVS text file");
         options.addOption(outputblobdir, true, "(Optional) Blob directory");
         options.addOption(destt, true, "(Optional) Name of the destination table");
+        options.addOption(destt, true, "(Optional) Name of the destination table");
+        options.addOption(silent, false, "(Optional) Silent mode");
         return options;
     }
 
@@ -58,8 +61,10 @@ public class Main {
         Optional<String> ocsv = cmd.hasOption(outputcsv) ? Optional.of(cmd.getOptionValue(outputcsv)) : Optional.empty();
         Optional<String> odir = cmd.hasOption(outputblobdir) ? Optional.of(cmd.getOptionValue(outputblobdir)) : Optional.empty();
         Optional<String> dtable = cmd.hasOption(destt) ? Optional.of(cmd.getOptionValue(destt)) : Optional.empty();
+        boolean silentmode = cmd.hasOption(silent);
         Log.info(String.format("Output directory: %s", odir.isPresent() ? odir.get() : "created automatically"));
         Log.info(String.format("Output delimited file: %s", ocsv.isPresent() ? ocsv.get() : "created automatically"));
+        Log.info(silentmode ? "Silent mode, no progress indicator on stdout": "Not silent, progress indicator on output");
         if (dtable.isPresent())
             Log.info(String.format("Data is moved to : %s CSV delimited NOT created", dtable.get()));
         else Log.info("Text delimited file will be created");
@@ -77,8 +82,8 @@ public class Main {
             Log.info("Number of rows:" + l);
 
             if (dtable.isPresent())
-                MoveRows.run(con, conf, tablename, l, dconn.get(), dtable.get());
-            else CreateCSV.run(con, conf, tablename, l, ocsv, odir);
+                MoveRows.run(con, conf, tablename, l, silentmode,dconn.get(), dtable.get());
+            else CreateCSV.run(con, conf, tablename, l, silentmode, ocsv, odir);
 
             if (dconn.isPresent()) dconn.get().close();
         } catch (SQLException | IOException ex) {

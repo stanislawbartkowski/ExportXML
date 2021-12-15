@@ -22,11 +22,11 @@ public class MoveRows {
         @Override
         void acceptrow(String id, Optional<InputStream> i, byte[] vals) throws IOException, SQLException {
 
-            prep.setString(1,id);
-            if (i.isPresent()) prep.setBlob(2,i.get());
+            prep.setString(1, id);
+            if (i.isPresent()) prep.setBlob(2, i.get());
             else {
                 ByteArrayInputStream bu = new ByteArrayInputStream(vals);
-                prep.setBlob(2,bu);
+                prep.setBlob(2, bu);
             }
             prep.execute();
             commitno++;
@@ -37,14 +37,14 @@ public class MoveRows {
         }
     }
 
-    public static void run(Connection conn, ConfPar par, String tablename, long recno,Connection dcon, String desttablename) throws SQLException, IOException {
+    public static void run(Connection conn, ConfPar par, String tablename, long recno, boolean silentmode, Connection dcon, String desttablename) throws SQLException, IOException {
 
         String stmt = String.format(par.getDestInsert(), desttablename);
-        Log.info(String.format("Target table %s",desttablename));
+        Log.info(String.format("Target table %s", desttablename));
         Log.info(stmt);
-        try (PreparedStatement prep = dcon.prepareStatement(stmt))  {
+        try (PreparedStatement prep = dcon.prepareStatement(stmt)) {
             RunCSV run = new RunCSV(prep);
-            run.run(conn,par,tablename,recno);
+            run.run(conn, par, tablename, recno, silentmode);
             // last commit, just in case
             dcon.commit();
         }
