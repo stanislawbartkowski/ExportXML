@@ -22,7 +22,7 @@ public class Main {
 
     private static void printHelp(Options options, Optional<String> par, boolean notfound) {
         HelpFormatter formatter = new HelpFormatter();
-        String header = "Export XML data from Oracle table (2021/12/14) ";
+        String header = "Export XML data from Oracle table (2021/12/15) ";
         if (par.isPresent()) header = " " + par.get() + (notfound ? " not found in the arg list" : "");
         formatter.printHelp(header, options);
         System.exit(4);
