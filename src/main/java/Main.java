@@ -77,9 +77,13 @@ public class Main {
             Optional<Connection> dconn = dtable.isPresent() ? Optional.of(connect(conf.getDestURL(), conf.getDestUser(), conf.getDestPassword())) : Optional.empty();
 
             Log.info("Connected");
-            Log.info("Calculating number of rows in " + tablename);
-            Long l = Query.numofRecords(con, tablename);
-            Log.info("Number of rows:" + l);
+            Optional<Long> l = Optional.empty();
+            if (silentmode) Log.info("Do not calculate numner of rows");
+            else {
+                Log.info("Calculating number of rows in " + tablename);
+                l = Optional.of(Query.numofRecords(con, tablename));
+                Log.info("Number of rows:" + l.get());
+            }
 
             if (dtable.isPresent())
                 MoveRows.run(con, conf, tablename, l, silentmode,dconn.get(), dtable.get());

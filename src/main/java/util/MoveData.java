@@ -13,7 +13,7 @@ abstract class MoveData {
 
     abstract void acceptrow(String id, Optional<InputStream> i, byte[] vals) throws IOException, SQLException;
 
-    void run(Connection conn, ConfPar par, String tablename, long recno, boolean silentmode) throws SQLException, IOException {
+    void run(Connection conn, ConfPar par, String tablename, Optional<Long> recno, boolean silentmode) throws SQLException, IOException {
 
         long counter = 0;
         String querystmt = "SELECT " + par.getIdCol() + "," + par.getXmlCol() + " FROM " + tablename;
@@ -36,7 +36,7 @@ abstract class MoveData {
                 if (counter == 0) Log.info("First row is arriving");
                 counter++;
                 if (!silentmode && counter % par.getCounter() == 0) {
-                    String info = String.format("%d%% %d (%d)", counter * 100 / recno, counter, recno);
+                    String info = String.format("%d%% %d (%d)", counter * 100 / recno.get(), counter, recno.get());
                     String s = String.format("\r %-50s", info);
                     System.out.print(s);
                 }

@@ -60,7 +60,7 @@ public class CreateCSV {
     }
 
 
-    public static void run(Connection conn, ConfPar par, String tablename, long recno, boolean silentmode, Optional<String> ocsv, Optional<String> oblob) throws SQLException, IOException {
+    public static void run(Connection conn, ConfPar par, String tablename, Optional<Long> recno, boolean silentmode, Optional<String> ocsv, Optional<String> oblob) throws SQLException, IOException {
 
         File outdir = new File(par.getDir());
 

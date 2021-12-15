@@ -10,12 +10,12 @@ import java.util.Optional;
 
 public class MoveRows {
 
-    private static class RunCSV extends MoveData {
+    private static class RunMove extends MoveData {
 
         private final PreparedStatement prep;
         private int commitno = 0;
 
-        RunCSV(PreparedStatement prep) {
+        RunMove(PreparedStatement prep) {
             this.prep = prep;
         }
 
@@ -37,13 +37,13 @@ public class MoveRows {
         }
     }
 
-    public static void run(Connection conn, ConfPar par, String tablename, long recno, boolean silentmode, Connection dcon, String desttablename) throws SQLException, IOException {
+    public static void run(Connection conn, ConfPar par, String tablename, Optional<Long> recno, boolean silentmode, Connection dcon, String desttablename) throws SQLException, IOException {
 
         String stmt = String.format(par.getDestInsert(), desttablename);
         Log.info(String.format("Target table %s", desttablename));
         Log.info(stmt);
         try (PreparedStatement prep = dcon.prepareStatement(stmt)) {
-            RunCSV run = new RunCSV(prep);
+            RunMove run = new RunMove(prep);
             run.run(conn, par, tablename, recno, silentmode);
             // last commit, just in case
             dcon.commit();
