@@ -37,14 +37,14 @@ public class MoveRows {
         }
     }
 
-    public static void run(Connection conn, ConfPar par, String tablename, Optional<Long> recno, boolean silentmode, Connection dcon, String desttablename) throws SQLException, IOException {
+    public static void run(Connection conn, ConfPar par, String tablename, Optional<Long> recno, boolean silentmode, Connection dcon, String desttablename, Optional<String> eqeury) throws SQLException, IOException {
 
         String stmt = String.format(par.getDestInsert(), desttablename);
         Log.info(String.format("Target table %s", desttablename));
         Log.info(stmt);
         try (PreparedStatement prep = dcon.prepareStatement(stmt)) {
             RunMove run = new RunMove(prep);
-            run.run(conn, par, tablename, recno, silentmode);
+            run.run(conn, par, tablename, recno, silentmode,eqeury);
             // last commit, just in case
             dcon.commit();
         }

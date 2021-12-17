@@ -16,9 +16,10 @@ public class Main {
     private final static String tabp = "t";
     private final static String help = "h";
     private final static String outputcsv = "oc";
-    private final static String outputblobdir = "ob";
+    private final static String outputblobfile = "ob";
     private final static String destt = "d";
     private final static String silent = "s";
+    private final static String query = "q";
 
     private static void printHelp(Options options, Optional<String> par, boolean notfound) {
         HelpFormatter formatter = new HelpFormatter();
@@ -37,10 +38,10 @@ public class Main {
         options.addOption(confp, true, "Configuration file");
         options.addOption(tabp, true, "Source table name");
         options.addOption(outputcsv, true, "(Optional) CVS text file");
-        options.addOption(outputblobdir, true, "(Optional) Blob directory");
-        options.addOption(destt, true, "(Optional) Name of the destination table");
+        options.addOption(outputblobfile, true, "(Optional) Blob path name");
         options.addOption(destt, true, "(Optional) Name of the destination table");
         options.addOption(silent, false, "(Optional) Silent mode");
+        options.addOption(query, true, "(Optional) Extraction query");
         return options;
     }
 
@@ -59,12 +60,14 @@ public class Main {
         if (!cmd.hasOption(confp)) printHelp(options, Optional.of(confp), true);
         if (!cmd.hasOption(tabp)) printHelp(options, Optional.of(tabp), true);
         Optional<String> ocsv = cmd.hasOption(outputcsv) ? Optional.of(cmd.getOptionValue(outputcsv)) : Optional.empty();
-        Optional<String> odir = cmd.hasOption(outputblobdir) ? Optional.of(cmd.getOptionValue(outputblobdir)) : Optional.empty();
+        Optional<String> oblob = cmd.hasOption(outputblobfile) ? Optional.of(cmd.getOptionValue(outputblobfile)) : Optional.empty();
+        Optional<String> oquery = cmd.hasOption(query) ? Optional.of(cmd.getOptionValue(query)) : Optional.empty();
         Optional<String> dtable = cmd.hasOption(destt) ? Optional.of(cmd.getOptionValue(destt)) : Optional.empty();
         boolean silentmode = cmd.hasOption(silent);
-        Log.info(String.format("Output directory: %s", odir.isPresent() ? odir.get() : "created automatically"));
+        Log.info(String.format("Output directory: %s", oblob.isPresent() ? oblob.get() : "created automatically"));
         Log.info(String.format("Output delimited file: %s", ocsv.isPresent() ? ocsv.get() : "created automatically"));
         Log.info(silentmode ? "Silent mode, no progress indicator on stdout": "Not silent, progress indicator on output");
+        Log.info(String.format("Extraction query %s",oquery.isPresent() ? oquery.get() : " (default)"));
         if (dtable.isPresent())
             Log.info(String.format("Data is moved to : %s CSV delimited NOT created", dtable.get()));
         else Log.info("Text delimited file will be created");
@@ -86,8 +89,8 @@ public class Main {
             }
 
             if (dtable.isPresent())
-                MoveRows.run(con, conf, tablename, l, silentmode,dconn.get(), dtable.get());
-            else CreateCSV.run(con, conf, tablename, l, silentmode, ocsv, odir);
+                MoveRows.run(con, conf, tablename, l, silentmode,dconn.get(), dtable.get(),oquery);
+            else CreateCSV.run(con, conf, tablename, l, silentmode, ocsv, oblob,oquery);
 
             if (dconn.isPresent()) dconn.get().close();
         } catch (SQLException | IOException ex) {

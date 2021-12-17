@@ -13,13 +13,14 @@ abstract class MoveData {
 
     abstract void acceptrow(String id, Optional<InputStream> i, byte[] vals) throws IOException, SQLException;
 
-    void run(Connection conn, ConfPar par, String tablename, Optional<Long> recno, boolean silentmode) throws SQLException, IOException {
+    void run(Connection conn, ConfPar par, String tablename, Optional<Long> recno, boolean silentmode, Optional<String> equery) throws SQLException, IOException {
 
         long counter = 0;
-        String querystmt = "SELECT " + par.getIdCol() + "," + par.getXmlCol() + " FROM " + tablename;
-        if (par.getQuery() != null) {
-            querystmt = String.format(par.getQuery(), tablename);
-        }
+        // default query
+        String query = "SELECT " + par.getIdCol() + "," + par.getXmlCol() + " FROM %s";
+        if (equery.isPresent()) query = equery.get();
+        else if (par.getQuery() != null) query = par.getQuery();
+        String querystmt = String.format(query, tablename);
         if (par.getWhere() != null) querystmt = querystmt + " WHERE " + par.getWhere();
         boolean asblob = par.readXmlasblob();
         try (ResultSet res = Query.runStatement(conn, querystmt)) {

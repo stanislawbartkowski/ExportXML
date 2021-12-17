@@ -11,7 +11,7 @@ import java.util.Optional;
 
 public class CreateCSV {
 
-    private final static String blobname = "BLOB";
+    private final static String defaultblobname = "BLOB";
 
     private static class RunCSV extends MoveData {
 
@@ -21,12 +21,14 @@ public class CreateCSV {
         private final PrintStream writer;
         private final ConfPar par;
         private long blobcounter = 0;
+        private final String blobfile;
 
 
-        RunCSV(OutputStream blobwriter, PrintStream writer, ConfPar par) {
+        RunCSV(OutputStream blobwriter, PrintStream writer, ConfPar par, String blobfile) {
             this.blobwriter = blobwriter;
             this.writer = writer;
             this.par = par;
+            this.blobfile = blobfile;
         }
 
         @Override
@@ -49,7 +51,7 @@ public class CreateCSV {
 
             writer.print(id);
             writer.print(par.getDel());
-            writer.print(blobname);
+            writer.print(blobfile);
             writer.print('.');
             writer.print(blobcounter);
             writer.print('.');
@@ -59,8 +61,16 @@ public class CreateCSV {
         }
     }
 
+    private static File extractDir(File f) {
+        File parent = f.getParentFile();
+        return parent;
+    }
 
-    public static void run(Connection conn, ConfPar par, String tablename, Optional<Long> recno, boolean silentmode, Optional<String> ocsv, Optional<String> oblob) throws SQLException, IOException {
+    private static String extractFile(File f) {
+        return f.getName();
+    }
+
+    public static void run(Connection conn, ConfPar par, String tablename, Optional<Long> recno, boolean silentmode, Optional<String> ocsv, Optional<String> oblob, Optional<String> equery) throws SQLException, IOException {
 
         File outdir = new File(par.getDir());
 
@@ -70,12 +80,15 @@ public class CreateCSV {
         File outtext = ocsv.isPresent() ? new File(ocsv.get()) : new File(outdir, tablename + ".csv");
         Log.info("Writing to delimited file " + outtext.getAbsolutePath());
 
-        File blobdir = oblob.isPresent() ? new File(oblob.get()) : new File(outdir, tablename + "blob");
-        Log.info("Check blob diretory " + blobdir.getAbsolutePath());
+        // blob file and dir
+        File blobfile = oblob.isPresent() ? new File(oblob.get()) : new File(new File(outdir, tablename + "blob"), defaultblobname);
+        File blobdir = extractDir(blobfile);
         blobdir.mkdirs();
         if (!blobdir.isDirectory()) Log.severe(blobdir.getAbsolutePath() + " not a directory");
-        File blobfile = new File(blobdir, blobname);
+        Log.info("Check blob directory " + blobdir.getAbsolutePath());
+        String blobname = extractFile(blobfile);
         Log.info("Blob content to " + blobfile.getAbsolutePath());
+
 
         long counter = 0;
         Log.info("Starting extracting table to delimited file");
@@ -83,8 +96,8 @@ public class CreateCSV {
         try (OutputStream blobwriter = new FileOutputStream(blobfile);
              PrintStream writer = new PrintStream(outtext)) {
 
-            RunCSV run = new RunCSV(blobwriter, writer, par);
-            run.run(conn, par, tablename, recno, silentmode);
+            RunCSV run = new RunCSV(blobwriter, writer, par,blobname);
+            run.run(conn, par, tablename, recno, silentmode, equery);
         }
     }
 }
