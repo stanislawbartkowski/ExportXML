@@ -1,6 +1,7 @@
 package util;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.util.Optional;
 
@@ -9,6 +10,19 @@ import java.util.Optional;
 abstract class MoveData {
 
     abstract void acceptrow(String id, Optional<InputStream> i, byte[] vals) throws IOException, SQLException;
+
+    private static InputStream toInputStream(Reader reader) throws IOException {
+
+        char[] charBuffer = new char[1024];
+        StringBuilder builder = new StringBuilder();
+
+        int read;
+        while ((read = reader.read(charBuffer, 0, charBuffer.length)) != -1) {
+            builder.append(charBuffer, 0, read);
+        }
+
+        return new ByteArrayInputStream(builder.toString().getBytes(StandardCharsets.UTF_8));
+    }
 
     void run(Connection conn, ConfPar par, String tablename, Optional<Long> recno, boolean silentmode, Optional<String> equery) throws SQLException, IOException {
 
@@ -22,22 +36,24 @@ abstract class MoveData {
         boolean asblob = par.readXmlasblob();
         try (ResultSet res = Query.runStatement(conn, querystmt)) {
             int xmlpos;
+            String xmlname = par.getXmlCol().toLowerCase();
             Log.info("Determine column type for " + par.getXmlCol());
-            for (xmlpos=1; xmlpos<=res.getMetaData().getColumnCount(); xmlpos++)
-                if (par.getXmlCol().equals(res.getMetaData().getColumnName(xmlpos))) break;
+            for (xmlpos = 1; xmlpos <= res.getMetaData().getColumnCount(); xmlpos++)
+                if (xmlname.equals(res.getMetaData().getColumnName(xmlpos).toLowerCase())) break;
 
             if (xmlpos > res.getMetaData().getColumnCount()) {
-                Log.severe(String.format("Column %s does not exist in the query ",par.getXmlCol()));
+                Log.severe(String.format("Column %s does not exist in the query ", par.getXmlCol()));
             }
             int coltype = res.getMetaData().getColumnType(xmlpos);
             boolean clob = coltype == Types.CLOB;
+            Log.info(clob ? "CLOB column discovered" : "XML column expected");
             while (res.next()) {
                 String id = res.getString(par.getIdCol());
                 if (asblob) {
                     InputStream is;
                     if (clob) {
                         Clob cl = res.getClob(xmlpos);
-                        is = cl.getAsciiStream();
+                        is = toInputStream(cl.getCharacterStream());
                     } else {
                         SQLXML xml = res.getSQLXML(xmlpos);
                         is = xml.getBinaryStream();
