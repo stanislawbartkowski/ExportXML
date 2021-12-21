@@ -1,10 +1,7 @@
 package util;
 
 import java.io.*;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.SQLXML;
+import java.sql.*;
 import java.util.Optional;
 
 // Visitor pattern
@@ -24,14 +21,30 @@ abstract class MoveData {
         if (par.getWhere() != null) querystmt = querystmt + " WHERE " + par.getWhere();
         boolean asblob = par.readXmlasblob();
         try (ResultSet res = Query.runStatement(conn, querystmt)) {
+            int xmlpos;
+            Log.info("Determine column type for " + par.getXmlCol());
+            for (xmlpos=1; xmlpos<=res.getMetaData().getColumnCount(); xmlpos++)
+                if (par.getXmlCol().equals(res.getMetaData().getColumnName(xmlpos))) break;
+
+            if (xmlpos > res.getMetaData().getColumnCount()) {
+                Log.severe(String.format("Column %s does not exist in the query ",par.getXmlCol()));
+            }
+            int coltype = res.getMetaData().getColumnType(xmlpos);
+            boolean clob = coltype == Types.CLOB;
             while (res.next()) {
                 String id = res.getString(par.getIdCol());
                 if (asblob) {
-                    SQLXML xml = res.getSQLXML(par.getXmlCol());
-                    acceptrow(id, Optional.of(xml.getBinaryStream()), null);
-
+                    InputStream is;
+                    if (clob) {
+                        Clob cl = res.getClob(xmlpos);
+                        is = cl.getAsciiStream();
+                    } else {
+                        SQLXML xml = res.getSQLXML(xmlpos);
+                        is = xml.getBinaryStream();
+                    }
+                    acceptrow(id, Optional.of(is), null);
                 } else {
-                    String xml = res.getString(par.getXmlCol()) + System.lineSeparator();
+                    String xml = res.getString(xmlpos) + System.lineSeparator();
                     acceptrow(id, Optional.empty(), xml.getBytes());
                 }
                 if (counter == 0) Log.info("First row is arriving");
